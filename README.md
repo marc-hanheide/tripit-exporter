@@ -71,18 +71,14 @@ export TRIPIT_OAUTH_TOKEN_SECRET="your_oauth_token_secret"
 #### Option 1: Running directly
 
 ```bash
-# Start with default settings (host: 0.0.0.0, port: 8000)
+# Make sure your virtual environment is activated, then run:
 python -m tripit_mcp
 
 # Or with custom host and port
 python -m tripit_mcp --host 127.0.0.1 --port 8080
-
-# If the tripit-mcp command is in your PATH, you can also use:
-# tripit-mcp
-# tripit-mcp --host 127.0.0.1 --port 8080
 ```
 
-If you get "command not found: tripit-mcp", it means the command is not in your PATH. This can happen depending on how Python and uv install script entry points on your system. Using the `python -m` approach above will always work.
+The server uses FastMCP v2, which provides a modern, asyncio-based implementation of the Model Context Protocol.
 
 #### Option 2: Using Docker Compose (recommended)
 

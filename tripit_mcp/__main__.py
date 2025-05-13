@@ -7,7 +7,7 @@ import argparse
 import os
 import sys
 
-from tripit_mcp.server import TripItMCPServer
+from tripit_mcp.server import start_server
 
 
 def parse_args():
@@ -45,10 +45,9 @@ def main():
     check_environment()
     
     print(f"Starting TripIt MCP server on {args.host}:{args.port}")
-    server = TripItMCPServer()
     
     try:
-        server.start(host=args.host, port=args.port)
+        start_server(host=args.host, port=args.port)
     except KeyboardInterrupt:
         print("\nShutting down TripIt MCP server")
         sys.exit(0)

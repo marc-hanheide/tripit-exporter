@@ -1,5 +1,5 @@
 # Use Python 3.10 slim image as base
-FROM python:3.13-slim
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
@@ -11,7 +11,9 @@ RUN pip install --no-cache-dir uv
 COPY pyproject.toml setup.py /app/
 
 # Install all dependencies using uv
-RUN uv venv && uv pip install -e .
+RUN uv venv --path /app/.venv --python python3.10 && \
+    . /app/.venv/bin/activate && \
+    uv pip install -e .
 
 # Copy the actual application code
 COPY . /app/
@@ -23,4 +25,4 @@ EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
 
 # Run the application
-CMD ["tripit-mcp"]
+CMD ["python", "-m", "tripit_mcp"]

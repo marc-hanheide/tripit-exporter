@@ -8,7 +8,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from tripit_mcp.tripit_client import TripItAPIClient
-from tripit_mcp.server import TripItMCPServer
+from tripit_mcp.server import TripItService
 
 
 @pytest.fixture
@@ -32,14 +32,14 @@ def mock_tripit_client():
         yield client_instance
 
 
-def test_tripit_mcp_server_init(mock_env_vars, mock_tripit_client):
-    """Test TripItMCPServer initialization."""
-    server = TripItMCPServer()
+def test_tripit_service_init(mock_env_vars, mock_tripit_client):
+    """Test TripItService initialization."""
+    service = TripItService()
     
-    assert server.consumer_key == "test_consumer_key"
-    assert server.consumer_secret == "test_consumer_secret"
-    assert server.oauth_token == "test_oauth_token"
-    assert server.oauth_token_secret == "test_oauth_token_secret"
+    assert service.consumer_key == "test_consumer_key"
+    assert service.consumer_secret == "test_consumer_secret"
+    assert service.oauth_token == "test_oauth_token"
+    assert service.oauth_token_secret == "test_oauth_token_secret"
     
     assert mock_tripit_client.list_trips.called == False
     assert mock_tripit_client.get_trip.called == False
