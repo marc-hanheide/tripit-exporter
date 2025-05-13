@@ -18,7 +18,7 @@ services:
       # - ./tripit_mcp:/app/tripit_mcp
       # Comment out the above line in production
       - ./examples:/app/examples
-    command: python -m tripit_mcp --host 0.0.0.0 --port 8000
+    command: python -m tripit_mcp --mode http --host 0.0.0.0 --port 8000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 30s

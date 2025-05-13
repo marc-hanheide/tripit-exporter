@@ -70,12 +70,32 @@ export TRIPIT_OAUTH_TOKEN_SECRET="your_oauth_token_secret"
 
 #### Option 1: Running directly
 
+The server supports two modes of operation:
+
+##### STDIO Mode (Default)
+
+STDIO mode is perfect for integrating with other tools as a subprocess:
+
 ```bash
 # Make sure your virtual environment is activated, then run:
-python -m tripit_mcp
+python -m tripit_mcp  # Runs in stdio mode by default
 
-# Or with custom host and port
-python -m tripit_mcp --host 127.0.0.1 --port 8080
+# Explicitly specify stdio mode
+python -m tripit_mcp --mode stdio
+```
+
+In this mode, the server communicates through stdin/stdout using the MCP protocol.
+
+##### HTTP Mode
+
+HTTP mode provides a web server interface to access the MCP functions:
+
+```bash
+# Start in HTTP mode with default host/port (0.0.0.0:8000)
+python -m tripit_mcp --mode http
+
+# Customize host and port
+python -m tripit_mcp --mode http --host 127.0.0.1 --port 8080
 ```
 
 The server uses FastMCP v2, which provides a modern, asyncio-based implementation of the Model Context Protocol.
@@ -88,7 +108,7 @@ cp .env.example .env
 # Edit .env with your credentials
 ```
 
-2. Build and start the container:
+2. Build and start the container (runs in HTTP mode):
 ```bash
 docker-compose up -d
 ```

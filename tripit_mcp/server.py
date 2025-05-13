@@ -124,8 +124,72 @@ async def get_trip(
         return {"error": str(e)}
 
 
-def start_server(host: str = "0.0.0.0", port: int = 8000):
-    """Start the MCP server."""
-    import uvicorn
+def start_server(mode: str = "stdio", host: str = "0.0.0.0", port: int = 8000):
+    """
+    Start the MCP server in the specified mode.
     
-    uvicorn.run(app, host=host, port=port)
+    Args:
+        mode: The server mode - "stdio" (default) or "http"
+        host: Host to bind to when using HTTP mode
+        port: Port to bind to when using HTTP mode
+    """
+    import sys
+    import logging
+    
+    # Configure logging to use stderr instead of stdout
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        stream=sys.stderr
+    )
+    
+    if mode == "stdio":
+        # Start in stdio mode (stdin/stdout communication)
+        import asyncio
+        import json
+        import sys
+        
+        # Debug message to stderr
+        sys.stderr.write("Starting stdio mode with FastMCP\n")
+        
+        # Simple echo test to check if stdio works
+        if "TRIPIT_MCP_TEST" in os.environ:
+            line = sys.stdin.readline().strip()
+            sys.stderr.write(f"Received input: {line!r}\n")
+            try:
+                data = json.loads(line)
+                sys.stdout.write(json.dumps({"echo": data}) + "\n")
+                sys.stdout.flush()
+                sys.exit(0)
+            except json.JSONDecodeError:
+                sys.stderr.write("Error decoding JSON input\n")
+                sys.exit(1)
+        
+        # Normal operation
+        asyncio.run(app.run_stdio_async())
+    else:
+        # Start in HTTP mode
+        import uvicorn
+        uvicorn.run(app, host=host, port=port, log_config={
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "default": {
+                    "()": "uvicorn.logging.DefaultFormatter",
+                    "fmt": "%(levelprefix)s %(message)s",
+                    "use_colors": True,
+                }
+            },
+            "handlers": {
+                "default": {
+                    "formatter": "default",
+                    "class": "logging.StreamHandler",
+                    "stream": sys.stderr,
+                }
+            },
+            "loggers": {
+                "uvicorn": {"handlers": ["default"], "level": "INFO", "propagate": False},
+                "uvicorn.error": {"level": "INFO"},
+                "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            },
+        })

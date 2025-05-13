@@ -14,16 +14,23 @@ def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="TripIt MCP Server")
     parser.add_argument(
+        "--mode", 
+        type=str, 
+        choices=["stdio", "http"], 
+        default="stdio", 
+        help="Server mode: 'stdio' for stdin/stdout communication or 'http' for HTTP server (default: stdio)"
+    )
+    parser.add_argument(
         "--host", 
         type=str, 
         default="0.0.0.0", 
-        help="Host to bind the server to (default: 0.0.0.0)"
+        help="Host to bind the server to when using HTTP mode (default: 0.0.0.0)"
     )
     parser.add_argument(
         "--port", 
         type=int, 
         default=8000, 
-        help="Port to bind the server to (default: 8000)"
+        help="Port to bind the server to when using HTTP mode (default: 8000)"
     )
     return parser.parse_args()
 
@@ -34,8 +41,8 @@ def check_environment():
     missing_vars = [var for var in required_vars if not os.environ.get(var)]
     
     if missing_vars:
-        print(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
-        print("Please set these variables before starting the server.")
+        sys.stderr.write(f"Error: Missing required environment variables: {', '.join(missing_vars)}\n")
+        sys.stderr.write("Please set these variables before starting the server.\n")
         sys.exit(1)
 
 
@@ -44,12 +51,15 @@ def main():
     args = parse_args()
     check_environment()
     
-    print(f"Starting TripIt MCP server on {args.host}:{args.port}")
-    
+    # Use stderr for informational messages so they don't interfere with stdio protocol
+    sys.stderr.write(f"Starting TripIt MCP server in {args.mode} mode\n")
+    if args.mode == "http":
+        sys.stderr.write(f"HTTP server will be available at http://{args.host}:{args.port}\n")
+        
     try:
-        start_server(host=args.host, port=args.port)
+        start_server(mode=args.mode, host=args.host, port=args.port)
     except KeyboardInterrupt:
-        print("\nShutting down TripIt MCP server")
+        sys.stderr.write("\nShutting down TripIt MCP server\n")
         sys.exit(0)
 
 
