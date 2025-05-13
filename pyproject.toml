@@ -3,7 +3,7 @@ name = "tripit-mcp"
 version = "0.1.0"
 description = "Model Context Protocol (MCP) server for TripIt API"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Marc Hanheide", email = "marc@hanheide.net"}
 ]
 readme = "README.md"
 requires-python = ">=3.10"
