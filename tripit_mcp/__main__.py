@@ -37,6 +37,11 @@ def parse_args():
 
 def check_environment():
     """Check if required environment variables are set."""
+    # Skip credential check in test mode
+    if os.environ.get("TRIPIT_MCP_TEST") == "1":
+        sys.stderr.write("Running in test mode, skipping credential check\n")
+        return
+        
     required_vars = ["TRIPIT_CONSUMER_KEY", "TRIPIT_CONSUMER_SECRET"]
     missing_vars = [var for var in required_vars if not os.environ.get(var)]
     

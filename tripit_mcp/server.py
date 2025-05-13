@@ -28,10 +28,10 @@ class TripItService:
     def __init__(self):
         """Initialize the TripIt service."""
         # Get TripIt API credentials from environment variables
-        self.consumer_key = os.environ.get("TRIPIT_CONSUMER_KEY", "")
-        self.consumer_secret = os.environ.get("TRIPIT_CONSUMER_SECRET", "")
-        self.oauth_token = os.environ.get("TRIPIT_OAUTH_TOKEN", "")
-        self.oauth_token_secret = os.environ.get("TRIPIT_OAUTH_TOKEN_SECRET", "")
+        self.consumer_key = os.environ.get("TRIPIT_CONSUMER_KEY", None)
+        self.consumer_secret = os.environ.get("TRIPIT_CONSUMER_SECRET", None)
+        self.oauth_token = os.environ.get("TRIPIT_OAUTH_TOKEN", None)
+        self.oauth_token_secret = os.environ.get("TRIPIT_OAUTH_TOKEN_SECRET", None)
         
         if not self.consumer_key or not self.consumer_secret:
             raise ValueError("TripIt API credentials not found in environment variables. "
@@ -151,20 +151,6 @@ def start_server(mode: str = "stdio", host: str = "0.0.0.0", port: int = 8000):
         
         # Debug message to stderr
         sys.stderr.write("Starting stdio mode with FastMCP\n")
-        
-        # Simple echo test to check if stdio works
-        if "TRIPIT_MCP_TEST" in os.environ:
-            line = sys.stdin.readline().strip()
-            sys.stderr.write(f"Received input: {line!r}\n")
-            try:
-                data = json.loads(line)
-                sys.stdout.write(json.dumps({"echo": data}) + "\n")
-                sys.stdout.flush()
-                sys.exit(0)
-            except json.JSONDecodeError:
-                sys.stderr.write("Error decoding JSON input\n")
-                sys.exit(1)
-        
         # Normal operation
         asyncio.run(app.run_stdio_async())
     else:
