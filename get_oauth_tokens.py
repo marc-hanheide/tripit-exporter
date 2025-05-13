@@ -1,0 +1,1 @@
+/Users/mhanheide/workspace/tripit-exporter/scripts/fixed_oauth.py

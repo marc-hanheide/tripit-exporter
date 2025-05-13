@@ -32,6 +32,11 @@ def parse_args():
         default=8000, 
         help="Port to bind the server to when using HTTP mode (default: 8000)"
     )
+    parser.add_argument(
+        "--generate-oauth",
+        action="store_true",
+        help="Generate OAuth tokens for TripIt API access instead of starting the server"
+    )
     return parser.parse_args()
 
 
@@ -51,9 +56,37 @@ def check_environment():
         sys.exit(1)
 
 
+def generate_oauth_tokens():
+    """Generate OAuth tokens for TripIt API access."""
+    from tripit_mcp.oauth import TripItOAuth
+    
+    # Get API credentials from environment
+    consumer_key = os.environ.get('TRIPIT_CONSUMER_KEY')
+    consumer_secret = os.environ.get('TRIPIT_CONSUMER_SECRET')
+    
+    if not consumer_key or not consumer_secret:
+        sys.stderr.write("Error: TripIt API credentials not found in environment variables.\n")
+        sys.stderr.write("Please set TRIPIT_CONSUMER_KEY and TRIPIT_CONSUMER_SECRET.\n")
+        sys.exit(1)
+    
+    try:
+        # Initialize OAuth handler and get tokens
+        oauth = TripItOAuth(consumer_key, consumer_secret)
+        oauth.authorize_app()
+    except Exception as e:
+        sys.stderr.write(f"OAuth token generation failed: {str(e)}\n")
+        sys.exit(1)
+
+
 def main():
     """Run the TripIt MCP server."""
     args = parse_args()
+    
+    # If --generate-oauth flag is provided, generate OAuth tokens and exit
+    if args.generate_oauth:
+        generate_oauth_tokens()
+        return
+    
     check_environment()
     
     # Use stderr for informational messages so they don't interfere with stdio protocol

@@ -46,6 +46,51 @@ This will install the package in development mode with all required dependencies
 
 ## Configuration
 
+### TripIt API Authentication
+
+This server supports both 2-legged and 3-legged OAuth authentication with the TripIt API:
+
+1. **Two-legged OAuth**: Uses only the Consumer Key and Secret (basic access)
+2. **Three-legged OAuth**: Uses Consumer Key/Secret and user OAuth tokens (full access)
+
+#### Generating OAuth Tokens
+
+For full access to a user's TripIt account, you'll need to generate OAuth tokens. The package includes several utility scripts to help with this process:
+
+##### Option 1: Using the simplified OAuth script (Recommended)
+
+```bash
+# Set your TripIt API credentials as environment variables
+export TRIPIT_CONSUMER_KEY=your_consumer_key
+export TRIPIT_CONSUMER_SECRET=your_consumer_secret
+
+# Run the script
+./get_oauth_tokens.py
+```
+
+##### Option 2: Using the built-in OAuth module
+
+```bash
+# Using environmental variables for credentials
+export TRIPIT_CONSUMER_KEY=your_consumer_key
+export TRIPIT_CONSUMER_SECRET=your_consumer_secret
+python -m tripit_mcp.oauth
+
+# Or directly within Python
+from tripit_mcp.oauth import TripItOAuth
+oauth = TripItOAuth(consumer_key, consumer_secret)
+access_token, access_token_secret = oauth.authorize_app()
+```
+
+Either script will:
+1. Get a request token from TripIt
+2. Open a browser window asking you to authorize the application
+3. After authorization, exchange the request token for access tokens
+4. Display the tokens to add to your environment variables
+5. Optionally verify the tokens with a test API call
+
+### Environment Variables
+
 Set the following environment variables before running the server:
 
 ```bash
@@ -206,6 +251,45 @@ Gets detailed information about a specific trip.
   }
 }
 ```
+
+## OAuth Troubleshooting
+
+If you're experiencing issues with TripIt API authentication:
+
+### Common OAuth Issues
+
+1. **"Access Request Failed"** when opening the authorization URL:
+   - This usually means there's an issue with the OAuth request token request
+   - Make sure your consumer key and secret are correct
+   - Try using the `fixed_oauth.py` script which has stricter RFC 3986 encoding
+
+2. **"Invalid oauth_verifier"** errors:
+   - TripIt uses 'oob' (out-of-band) for the OAuth callback
+   - Make sure 'oauth_callback=oob' is included correctly in the request
+
+3. **Empty or unexpected responses from TripIt API**:
+   - Check that your API application is approved and active in TripIt
+   - Verify network connectivity to api.tripit.com
+
+### OAuth Debugging Tools
+
+Several debugging tools are available to help diagnose OAuth issues:
+
+1. **Standalone OAuth script**:
+   ```bash
+   ./get_oauth_tokens.py
+   ```
+
+2. **Debug OAuth utility** (shows detailed request/response information):
+   ```bash
+   python scripts/debug_oauth.py
+   ```
+
+3. **Alternative OAuth implementations** to isolate issues:
+   - `scripts/alt_oauth.py` - Uses `requests` library instead of `httpx`
+   - `scripts/minimal_oauth.py` - Uses only standard library modules
+
+For a detailed explanation of the OAuth fixes implemented in this project, see the [OAUTH_FIX.md](OAUTH_FIX.md) document.
 
 ## Using with MCP Clients
 

@@ -9,11 +9,13 @@ import random
 import string
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Union, Any
-from urllib.parse import quote
+from typing import Dict, List, Optional, Union, Any, Tuple
+from urllib.parse import quote, parse_qsl
 
 import httpx
 from dateutil import parser as date_parser
+
+from .oauth import TripItOAuth
 
 
 class TripItAPIError(Exception):
@@ -46,7 +48,7 @@ class TripItAPIClient:
         """Generate a random nonce for OAuth requests."""
         return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
     
-    def _generate_oauth_signature(self, method: str, url: str, params: Dict[str, str]) -> str:
+    def _generate_oauth_signature(self, method: str, url: str, params: Dict[str, str], token_secret: str = "") -> str:
         """
         Generate OAuth signature for a request.
         
@@ -54,20 +56,30 @@ class TripItAPIClient:
             method: HTTP method
             url: Request URL
             params: Request parameters
+            token_secret: OAuth token secret for signature key
             
         Returns:
             The OAuth signature
         """
-        # Create signature base string
-        param_string = "&".join(f"{quote(k, safe='')}={quote(v, safe='')}" 
-                               for k, v in sorted(params.items()))
-        base_string = f"{method}&{quote(url, safe='')}&{quote(param_string, safe='')}"
+        # Create signature base string exactly per OAuth 1.0a spec
+        # 1. Convert params to list of key-value pairs and sort them
+        param_pairs = sorted((quote(k, safe='~'), quote(v if v is not None else '', safe='~')) 
+                            for k, v in params.items())
         
-        # Generate signature
-        key = f"{quote(self.consumer_secret, safe='')}&"
-        if self.oauth_token_secret:
-            key += quote(self.oauth_token_secret, safe='')
+        # 2. Join each key=value pair with &
+        param_string = '&'.join(f"{k}={v}" for k, v in param_pairs)
         
+        # 3. Create the base string per OAuth spec
+        base_string = f"{method.upper()}&{quote(url, safe='')}&{quote(param_string, safe='')}"
+        
+        # 4. Create the signing key exactly as TripIt expects
+        key = f"{quote(self.consumer_secret, safe='')}"
+        if token_secret:
+            key += f"&{quote(token_secret, safe='')}"
+        else:
+            key += "&"
+        
+        # 5. Generate HMAC-SHA1 signature and base64 encode it
         signature = base64.b64encode(
             hmac.new(key.encode(), base_string.encode(), hashlib.sha1).digest()
         ).decode()
@@ -104,8 +116,9 @@ class TripItAPIClient:
             all_params.update(params)
         all_params.update(oauth_params)
         
-        # Generate signature
-        oauth_params['oauth_signature'] = self._generate_oauth_signature(method, url, all_params)
+        # Generate signature using the token secret if available
+        token_secret = self.oauth_token_secret if self.oauth_token_secret and self.oauth_token_secret.strip() else ""
+        oauth_params['oauth_signature'] = self._generate_oauth_signature(method, url, all_params, token_secret)
         
         return oauth_params
     
@@ -119,8 +132,10 @@ class TripItAPIClient:
         Returns:
             Authorization header value
         """
+        # Format exactly as specified by TripIt API documentation
+        # Use proper encoding and format with comma separation
         auth_header = 'OAuth ' + ', '.join(
-            f'{quote(k, safe="")}="{quote(v, safe="")}"' for k, v in sorted(oauth_params.items())
+            f'{quote(k, safe="")}="{quote(v, safe="~")}"' for k, v in sorted(oauth_params.items())
         )
         return auth_header
     
