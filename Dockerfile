@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir uv
 COPY pyproject.toml setup.py /app/
 
 # Install all dependencies using uv
-RUN uv pip install -e .
+RUN uv venv && uv pip install -e .
 
 # Copy the actual application code
 COPY . /app/

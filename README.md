@@ -9,11 +9,13 @@ A Model Context Protocol (MCP) server that provides access to your TripIt trip d
 - Get detailed information about specific trips
 - OAuth authenticated access to the TripIt API
 - Built using FastMCP for MCP protocol implementation
+- Docker and Docker Compose support for easy deployment
 
 ## Prerequisites
 
-- Python 3.8+
-- [uv](https://github.com/astral-sh/uv) - Python package manager
+- Python 3.8+ (for local installation)
+- [uv](https://github.com/astral-sh/uv) - Python package manager (for local installation)
+- Docker and Docker Compose (for containerized deployment)
 - TripIt account with API access (Consumer Key and Secret)
 - OAuth token credentials (for authenticated access)
 
@@ -66,12 +68,37 @@ export TRIPIT_OAUTH_TOKEN_SECRET="your_oauth_token_secret"
 
 ### Starting the server
 
+#### Option 1: Running directly
+
 ```bash
 # Start with default settings (host: 0.0.0.0, port: 8000)
 tripit-mcp
 
 # Or with custom host and port
 tripit-mcp --host 127.0.0.1 --port 8080
+```
+
+#### Option 2: Using Docker Compose (recommended)
+
+1. Copy the example environment file and fill in your TripIt API credentials:
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
+
+2. Build and start the container:
+```bash
+docker-compose up -d
+```
+
+3. Check the logs:
+```bash
+docker-compose logs -f
+```
+
+4. Stop the container:
+```bash
+docker-compose down
 ```
 
 ### MCP Functions

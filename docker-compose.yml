@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  tripit-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - TRIPIT_CONSUMER_KEY=${TRIPIT_CONSUMER_KEY}
+      - TRIPIT_CONSUMER_SECRET=${TRIPIT_CONSUMER_SECRET}
+      - TRIPIT_OAUTH_TOKEN=${TRIPIT_OAUTH_TOKEN:-}
+      - TRIPIT_OAUTH_TOKEN_SECRET=${TRIPIT_OAUTH_TOKEN_SECRET:-}
+    restart: unless-stopped
+    volumes:
+      # Optional: For development, mount the source code to enable live changes
+      # - ./tripit_mcp:/app/tripit_mcp
+      # Comment out the above line in production
+      - ./examples:/app/examples
+    command: tripit-mcp --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
