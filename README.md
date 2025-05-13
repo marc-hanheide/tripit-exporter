@@ -109,6 +109,11 @@ export TRIPIT_OAUTH_TOKEN_SECRET="your_oauth_token_secret"
 2. Create a new application to get your Consumer Key and Consumer Secret
 3. For OAuth tokens, you'll need to implement the OAuth flow or use the TripIt API to generate tokens
 
+## Documentation
+
+- [Interactive OAuth Login](docs/interactive_oauth.md) - Detailed guide on using the interactive OAuth login feature
+- [API Reference](docs/api_reference.md) - Complete reference for all MCP functions
+
 ## Usage
 
 ### Starting the server
@@ -145,6 +150,26 @@ python -m tripit_mcp --mode http --host 127.0.0.1 --port 8080
 
 The server uses FastMCP v2, which provides a modern, asyncio-based implementation of the Model Context Protocol.
 
+##### Interactive OAuth Authentication
+
+You can also use an interactive OAuth authentication process directly through the MCP by using the `tripit_login` tool. This approach doesn't require you to set the OAuth tokens as environment variables:
+
+1. Start the server with only your consumer key and secret set:
+```bash
+export TRIPIT_CONSUMER_KEY="your_consumer_key"
+export TRIPIT_CONSUMER_SECRET="your_consumer_secret"
+python -m tripit_mcp
+```
+
+2. Use the `tripit_login` tool in your MCP client to initiate the authentication process
+3. Follow the instructions to authorize the application in your browser
+4. Use the `tripit_login_complete` tool to finalize authentication
+5. Once authenticated, you can use the other TripIt API tools
+
+For a complete example of interactive OAuth authentication, see the `examples/interactive_login.py` script.
+
+See [Interactive OAuth Documentation](docs/interactive_oauth.md) for detailed information about the authentication flow.
+
 #### Option 2: Using Docker Compose (recommended)
 
 1. Copy the example environment file and fill in your TripIt API credentials:
@@ -171,6 +196,43 @@ docker-compose down
 ### MCP Functions
 
 The server provides the following MCP functions:
+
+#### Authentication Tools
+
+Before using any of the data retrieval tools, you must authenticate with TripIt using one of these methods:
+
+1. Set `TRIPIT_OAUTH_TOKEN` and `TRIPIT_OAUTH_TOKEN_SECRET` as environment variables (pre-authenticated)
+2. Use the interactive login process via the MCP tools below
+
+##### `tripit_login`
+
+Initiates the OAuth authorization process with TripIt.
+
+**Parameters:**
+- None
+
+**Returns:**
+- Authorization URL and instructions for the user
+- Request token details to use with `tripit_login_complete`
+
+##### `tripit_login_complete`
+
+Completes the OAuth authorization process after the user has authorized access.
+
+**Parameters:**
+- `request_token`: The request token from `tripit_login`
+- `request_token_secret`: The request token secret from `tripit_login`
+
+##### `tripit_auth_status`
+
+Checks if you're currently authenticated with TripIt.
+
+**Parameters:**
+- None
+
+#### Data Retrieval Tools
+
+These tools require prior authentication via `tripit_login` or environment variables.
 
 #### `list_trips`
 

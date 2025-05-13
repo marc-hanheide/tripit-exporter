@@ -37,9 +37,14 @@ coverage.xml
 # Virtual environments
 env/
 venv/
+.venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Environment files containing secrets
+.env
+debug.log
 
 # IDEs
 .idea/
