@@ -45,17 +45,16 @@ class TripItService:
             self.oauth_token_secret
         )
     
-    def list_trips(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> List[Dict[str, Any]]:
-        """List trips, optionally filtered by date range."""
-        trips = self.client.list_trips(
-            start_date=start_date,
-            end_date=end_date,
+    def list_trips(self, past: bool = False) -> List[Dict[str, Any]]:
+        """List trips, either past or current/future trips."""
+        trips_data = self.client.list_trips(
+            past=past,
             include_objects=True
         )
         
         # Extract relevant trip information
         formatted_trips = []
-        for trip in trips:
+        for trip in trips_data['trips']:
             formatted_trip = {
                 "id": trip.get("id"),
                 "name": trip.get("display_name"),
@@ -80,24 +79,50 @@ class TripItService:
 tripit_service = TripItService()
 
 
-@app.tool(description="List all trips, optionally filtered by date range")
+@app.tool(description="List trips with pagination support, either past or current/future")
 async def list_trips(
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
-) -> Dict[str, List[Dict[str, Any]]]:
+    past: bool = False,
+    page_num: Optional[int] = None,
+    page_size: Optional[int] = None
+) -> Dict[str, Any]:
     """
-    List all trips, optionally filtered by date range.
+    List trips with pagination support, either past or current/future.
     
     Args:
-        start_date: Optional start date for filtering trips (YYYY-MM-DD)
-        end_date: Optional end date for filtering trips (YYYY-MM-DD)
+        past: If True, returns past trips. If False, returns current and future trips.
+        page_num: Page number for pagination (positive integer)
+        page_size: Number of items per page (positive integer)
         
     Returns:
-        Dictionary containing a list of trips with basic information
+        Dictionary containing a list of trips with basic information and pagination metadata
     """
     try:
-        trips = tripit_service.list_trips(start_date, end_date)
-        return {"trips": trips}
+        # Call the updated TripIt service method with pagination parameters
+        trips_data = tripit_service.client.list_trips(
+            past=past,
+            include_objects=True,
+            page_num=page_num,
+            page_size=page_size
+        )
+        
+        # Extract relevant trip information
+        formatted_trips = []
+        for trip in trips_data['trips']:
+            formatted_trip = {
+                "id": trip.get("id"),
+                "name": trip.get("display_name"),
+                "start_date": trip.get("start_date"),
+                "end_date": trip.get("end_date"),
+                "primary_location": trip.get("primary_location"),
+                "is_private": trip.get("is_private") == "true"
+            }
+            formatted_trips.append(formatted_trip)
+        
+        # Return the formatted trips along with pagination metadata
+        return {
+            "trips": formatted_trips,
+            "pagination": trips_data['pagination']
+        }
     except TripItAPIError as e:
         return {"error": str(e)}
 

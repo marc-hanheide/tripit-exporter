@@ -189,47 +189,56 @@ class TripItAPIClient:
         except (httpx.RequestError, ValueError) as e:
             raise TripItAPIError(f"Request failed: {str(e)}") from e
     
-    def list_trips(self, start_date: Optional[Union[str, datetime]] = None, 
-                   end_date: Optional[Union[str, datetime]] = None, 
-                   include_objects: bool = True) -> List[Dict[str, Any]]:
+    def list_trips(self, past: bool = False, include_objects: bool = True, 
+                   page_num: Optional[int] = None, page_size: Optional[int] = None) -> Dict[str, Any]:
         """
-        List all trips, optionally filtered by date range.
+        List trips, either past or current/future trips, with pagination support.
         
         Args:
-            start_date: Start date for filtering trips
-            end_date: End date for filtering trips
+            past: If True, returns past trips. If False, returns current and future trips.
             include_objects: Whether to include trip objects in the response
+            page_num: Page number for pagination (positive integer, the default is 1, the maximum page is returned in every response)
+            page_size: Number of items per page (positive integer, the default is 5)
             
         Returns:
-            List of trips
+            Dictionary containing the list of trips and pagination metadata
         """
         params = {
-            'format': 'json'
+            'format': 'json',
+            'past': 'true' if past else 'false'
         }
         
         if include_objects:
             params['include_objects'] = 'true'
         
-        if start_date:
-            if isinstance(start_date, datetime):
-                start_date = start_date.strftime('%Y-%m-%d')
-            params['start_date'] = start_date
-            
-        if end_date:
-            if isinstance(end_date, datetime):
-                end_date = end_date.strftime('%Y-%m-%d')
-            params['end_date'] = end_date
+        # Add pagination parameters if provided
+        if page_num is not None and page_num > 0:
+            params['page_num'] = str(page_num)
+        
+        if page_size is not None and page_size > 0:
+            params['page_size'] = str(page_size)
         
         response = self._make_request('GET', 'list/trip', params=params)
         
-        # Handle the TripIt API response format
+        # Prepare result with trips and pagination info
+        result = {
+            'trips': [],
+            'pagination': {
+                'page_num': int(response.get('page_num', 1)),
+                'page_size': int(response.get('page_size', 0)),
+                'max_page': int(response.get('max_page', 1))
+            }
+        }
+        
+        # Handle the TripIt API response format for trips
         if 'Trip' in response:
             if isinstance(response['Trip'], list):
-                return response['Trip']
+                result['trips'] = response['Trip']
             else:
                 # If there's only one trip, it might be returned as a dict instead of a list
-                return [response['Trip']]
-        return []
+                result['trips'] = [response['Trip']]
+        
+        return result
     
     def get_trip(self, trip_id: str, include_objects: bool = True) -> Dict[str, Any]:
         """
