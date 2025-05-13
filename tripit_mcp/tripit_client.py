@@ -94,7 +94,8 @@ class TripItAPIClient:
             'oauth_version': '1.0',
         }
         
-        if self.oauth_token:
+        # Only include OAuth token if it exists and is not empty
+        if self.oauth_token and self.oauth_token.strip():
             oauth_params['oauth_token'] = self.oauth_token
         
         # Combine with additional params for signature generation
